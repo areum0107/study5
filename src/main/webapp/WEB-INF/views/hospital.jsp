@@ -29,6 +29,7 @@ table {
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x2js/1.2.0/xml2json.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 </head>
 <body>
 <input type="button" id="id_save" value="저장하기">
@@ -36,11 +37,12 @@ table {
 <div>
 <div id="id_hosInfo"></div>
 
-<div id="id_hosDB"></div>
+<div id="myGrid" class="ag-theme-alpine"></div>
 </div>
 <script type="text/javascript">
 
 var v_items;
+var jsonObj;
 var v_hosInfo = document.getElementById("id_hosInfo");
 var v_ajax = new XMLHttpRequest();
 
@@ -51,7 +53,7 @@ v_ajax.onreadystatechange = function(){
     if(v_ajax.readyState == 4 && v_ajax.status == 200){
     	// Create x2js instance with default config
     	var x2js = new X2JS();
-    	var jsonObj = x2js.xml_str2json(v_ajax.responseText);
+    	jsonObj = x2js.xml_str2json(v_ajax.responseText);
     	
     	console.log(jsonObj.response.body.items.item);
     	v_items = jsonObj.response.body.items.item;
@@ -100,6 +102,8 @@ $("#id_save").on("click",function(){
     });
 });
 
+// 테이블 형식으로 DB 불러오기
+/*
 $("#id_db_call").on("click",function(){
 	$("#id_hosDB").html("");
 	
@@ -140,7 +144,67 @@ $("#id_db_call").on("click",function(){
 	}); 	// ajax
 		
 });
+ */ 
  
+// Grid 사용하여 DB 불러오기
+
+$("#id_db_call").on("click",function(){
+$("#id_hosDB").html("");
+	
+	$.ajax({
+		type :"POST" 						// 전송 방식 설정 (Defaut : GET)
+	  , url : "/study5/hospitalList"		// 요청 페이지 URL정보
+	  , dataType : 'json'  					// 서버로부터 전달받을 데이터 유형 (html, xml, json, script)
+	//  , data : 					// 서버에 전송할 파라미터 정보
+	  , success : function(data) {
+		  console.log(data.data);  // 데이타 가져왔는지 체크
+          gridOptions.api.setRowData(data.data); //aggrid에서 rowdata세팅해주는 API
+        //  gridOptions.rowData=data.data; //aggrid에서 rowdata세팅해주는 API
+          
+		  var columnDefs = [
+			    { headerName: "번호", field: "no", sortable: true },
+			    { headerName: "시도명", field: "sidonm", sortable: true, filter: true },
+			    { headerName: "시군구명", field: "sggunm", sortable: true, filter: true },
+			    { headerName: "전화번호", field: "telno", sortable: true },
+			    { headerName: "기관명", field: "yadmnm", sortable: true }
+			];
+
+			// specify the data
+			var rowData = [
+			    // {make: "Toyota", model: "Celica", price: 35000},
+			    // {make: "Ford", model: "Mondeo", price: 32000},
+			    // {make: "Porsche", model: "Boxter", price: 72000}
+			];
+
+			// let the grid know which columns and what data to use
+			var gridOptions = {
+			    pagination: true,
+			    paginationPageSize: 10,
+			    columnDefs: columnDefs,
+			    rowData: rowData,
+			    rowSelection: 'multiple'
+			};
+
+			// setup the grid after the page has finished loading
+			// DOMContentLoaded가 onload 이벤트보다 더 빠름
+
+			document.addEventListener('DOMContentLoaded', function () {
+			    var gridDiv = document.querySelector('#id_hosDB');
+			    new agGrid.Grid(gridDiv, gridOptions);
+			}); 
+		  
+		  
+		} 		 		// 요청에 성공한 경우 호출되는 함수 (data, status, xhr )
+	  , error :	function(req, st, err) {
+			console.log('--------------------------------------');
+			console.log('request', req);
+			console.log('status', st);
+			console.log('errors', err);
+			console.log('--------------------------------------');
+		}			// 요청에 실패한 경우 호출되는 함수 (xhr, status, error)
+	}); 	// ajax
+}); 
+
 </script>
 </body>
 </html>

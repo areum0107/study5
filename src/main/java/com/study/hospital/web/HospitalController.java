@@ -62,7 +62,6 @@ public class HospitalController {
 			BufferedReader br = new BufferedReader(new InputStreamReader(urlconnection.getInputStream()));
 			
 			String returnLine;
-//			result.append("<xmp>");
 			while ((returnLine = br.readLine()) != null) {
 				result.append(returnLine + "\n");
 			}
