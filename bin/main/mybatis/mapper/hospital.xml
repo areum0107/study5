@@ -17,6 +17,19 @@
 	FROM HOSPITAL
   </select>
 
+  <select id="getHospitalVO" resultType="com.study.hospital.vo.HospitalVO" parameterType="int">
+    SELECT no
+    	 , adtfrdd
+		 , sggunm
+		 , sidonm
+		 , spcladmtycd
+		 , telno
+		 , yadmnm
+		 , hosptytpcd
+	FROM HOSPITAL
+   WHERE no = #{no}
+  </select>
+
   <insert id="insertHospital" parameterType="com.study.hospital.vo.HospitalVO">
   	INSERT INTO HOSPITAL (
   				no

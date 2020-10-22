@@ -14,15 +14,17 @@ table {
 	position: relative;
 	vertical-align: top;
 	display: inline-block;
-	width: 48%;
+	width: 550px;
+	height: 500px;
 	border: 1px solid black;
+	overflow: scroll;
 }
 
-#id_hosDB {
+#myGrid {
 	position: relative;
 	vertical-align: top;
 	display: inline-block;
-	width: 48%;
+	width: 550px;
 	height: 500px;
 	border: 1px solid red;
 }
@@ -34,13 +36,15 @@ table {
 <body>
 <input type="button" id="id_save" value="저장하기">
 <input type="button" id="id_db_call" value="DB호출">
+<input type="button" id="id_gird" value="그리드 선택값 확인">
 <div>
-<div id="id_hosInfo"></div>
+<div id="id_hosInfo" ></div>
 
-<div id="myGrid" class="ag-theme-alpine"></div>
+<div id="myGrid" class="ag-theme-alpine" style="height: 500px; width:500px;"><h1>DB에 저장된 데이터</h1></div>
 </div>
 <script type="text/javascript">
 
+var v_newWin = null;		// 새 창
 var v_items;
 var jsonObj;
 var v_hosInfo = document.getElementById("id_hosInfo");
@@ -58,7 +62,7 @@ v_ajax.onreadystatechange = function(){
     	console.log(jsonObj.response.body.items.item);
     	v_items = jsonObj.response.body.items.item;
     	
-    	var v_tblStr = "<table border='1'>";
+    	var v_tblStr = "<h1>API에서 호출한 데이터</h1><table border='1'>";
         v_tblStr += "<tr><th>선택</th><th>시도</th><th>군구</th><th>병원이름</th><th>전화번호</th></tr>"
         for(var i=0; i<v_items.length; i++){
             v_tblStr += "<tr>";
@@ -98,7 +102,6 @@ $("#id_save").on("click",function(){
 			      alert('insert 성공'); // 성공시 코드
 			}
 		});
-        
     });
 });
 
@@ -147,64 +150,73 @@ $("#id_db_call").on("click",function(){
  */ 
  
 // Grid 사용하여 DB 불러오기
-
 $("#id_db_call").on("click",function(){
-$("#id_hosDB").html("");
-	
-	$.ajax({
-		type :"POST" 						// 전송 방식 설정 (Defaut : GET)
-	  , url : "/study5/hospitalList"		// 요청 페이지 URL정보
-	  , dataType : 'json'  					// 서버로부터 전달받을 데이터 유형 (html, xml, json, script)
-	//  , data : 					// 서버에 전송할 파라미터 정보
-	  , success : function(data) {
-		  console.log(data.data);  // 데이타 가져왔는지 체크
-          gridOptions.api.setRowData(data.data); //aggrid에서 rowdata세팅해주는 API
-        //  gridOptions.rowData=data.data; //aggrid에서 rowdata세팅해주는 API
-          
-		  var columnDefs = [
-			    { headerName: "번호", field: "no", sortable: true },
-			    { headerName: "시도명", field: "sidonm", sortable: true, filter: true },
-			    { headerName: "시군구명", field: "sggunm", sortable: true, filter: true },
-			    { headerName: "전화번호", field: "telno", sortable: true },
-			    { headerName: "기관명", field: "yadmnm", sortable: true }
-			];
+	f_data();
+});
+var f_data = function () {
+    // ES6버전의 Promise는 국내 현실상(IE11버전 호환성) 아직 쓰기가 무리가 있음
+    //그래서 AJAX부분은 직접 구현해서 사용하는 것이 현실적인 대안
+    var v_ajax = new XMLHttpRequest();
+    v_ajax.open("get", "/study5/hospitalList", true);
+    v_ajax.onreadystatechange = function () {
+        if (v_ajax.readyState == 4 && v_ajax.status == 200) {
+            console.log(JSON.parse(v_ajax.responseText).data);  // 데이타 가져왔는지 체크
+            gridOptions.api.setRowData(JSON.parse(v_ajax.responseText).data); //aggrid에서 rowdata세팅해주는 API
+        }
+    }
+    v_ajax.send();
+}
 
-			// specify the data
-			var rowData = [
-			    // {make: "Toyota", model: "Celica", price: 35000},
-			    // {make: "Ford", model: "Mondeo", price: 32000},
-			    // {make: "Porsche", model: "Boxter", price: 72000}
-			];
+var columnDefs = [
+	{ headerName: "번호", field: "no", sortable: true, sort: 'asc', width: 110,
+		headerCheckboxSelection: true,
+	    headerCheckboxSelectionFilteredOnly: true,
+	    checkboxSelection: true
+	 },
+    { headerName: "시도명", field: "sidonm", sortable: true, filter: true, width: 110 },
+    { headerName: "시군구명", field: "sggunm", sortable: true, filter: true, width: 110 },
+    { headerName: "전화번호", field: "telno", sortable: true },
+    { headerName: "기관명", field: "yadmnm", sortable: true }
+];
 
-			// let the grid know which columns and what data to use
-			var gridOptions = {
-			    pagination: true,
-			    paginationPageSize: 10,
-			    columnDefs: columnDefs,
-			    rowData: rowData,
-			    rowSelection: 'multiple'
-			};
+// specify the data
+var rowData = [];
 
-			// setup the grid after the page has finished loading
-			// DOMContentLoaded가 onload 이벤트보다 더 빠름
+// let the grid know which columns and what data to use
+var gridOptions = {
+    pagination: true,
+    paginationPageSize: 8,
+    columnDefs: columnDefs,
+    rowData: rowData,
+    rowSelection: 'multiple',
+    domLayout: 'autoHeight',
+    onRowClicked : function(event){
+        console.log(gridOptions.api.getSelectedRows()[0].no);
+        v_newWin = window.open("/study5/hospitalView?no="+gridOptions.api.getSelectedRows()[0].no, "",
+        					   "left=500, top=200, width=450,height=350");
+        /*
+     	// 새 창에 있는 text박스의 value값을 내 창의 text박스 value값으로 바꿔라
+        if(v_newWin != null){
+            v_newWin.document.getElementById("new_txt").value
+             = document.getElementById("old_txt").value;
+        } else {
+            alert("새 창이 없습니다");
+        }
+        */
+    }
+};
 
-			document.addEventListener('DOMContentLoaded', function () {
-			    var gridDiv = document.querySelector('#id_hosDB');
-			    new agGrid.Grid(gridDiv, gridOptions);
-			}); 
-		  
-		  
-		} 		 		// 요청에 성공한 경우 호출되는 함수 (data, status, xhr )
-	  , error :	function(req, st, err) {
-			console.log('--------------------------------------');
-			console.log('request', req);
-			console.log('status', st);
-			console.log('errors', err);
-			console.log('--------------------------------------');
-		}			// 요청에 실패한 경우 호출되는 함수 (xhr, status, error)
-	}); 	// ajax
+// setup the grid after the page has finished loading
+// DOMContentLoaded가 onload 이벤트보다 더 빠름
+document.addEventListener('DOMContentLoaded', function () {
+    var gridDiv = document.querySelector('#myGrid');
+    new agGrid.Grid(gridDiv, gridOptions);
 }); 
 
+// grid 안에서 행 클릭시 row 정보 가져옴
+$("#id_gird").on("click",function(){
+	console.log(gridOptions.api.getSelectedRows());
+});
 </script>
 </body>
 </html>

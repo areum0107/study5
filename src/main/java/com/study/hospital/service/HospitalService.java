@@ -25,6 +25,12 @@ public class HospitalService {
 		return hospitalList;
 	}
 	
+	public HospitalVO getHospitalVO(int no) {
+		HospitalVO hospitalVO = hospitalMapper.getHospitalVO(no);
+		
+		return hospitalVO;
+	}
+	
 	public void insertHospital(HospitalVO hospitalVO) {
 		hospitalMapper.insertHospital(hospitalVO);
 	}

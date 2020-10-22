@@ -10,6 +10,7 @@ import com.study.hospital.vo.HospitalVO;
 public interface HospitalMapper {
 
 	public List<HospitalVO> getHospitalList(HospitalVO hospitalVO);		// DB에 저장된 리스트 불러오기
+	public HospitalVO getHospitalVO(int no);
 	public void insertHospital(HospitalVO hospitalVO);					// 체크된 항목 DB에 insert
 	void insertExcel(Map<String, String> paramMap) throws Exception;	// excel을 DB에 insert
 }

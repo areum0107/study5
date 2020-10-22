@@ -51,7 +51,7 @@ public class HospitalController {
 		try {
 			String urlstr = "http://apis.data.go.kr/B551182/pubReliefHospService/getpubReliefHospList?" + 
 							"ServiceKey=" + serviceKey +
-							"&numOfRows=10" +
+							"&numOfRows=100" +
 							"&pageNo=1" +
 							"&spclAdmTyCd=A0";
 			
@@ -102,6 +102,18 @@ public class HospitalController {
 		
 		return "hospitalList";
 	}
+	
+	@RequestMapping("/hospitalView")
+	public String hospitalView(int no, ModelMap model) {
+		logger.debug("no={}", no);
+		
+		HospitalVO hospitalVO =  hospitalService.getHospitalVO(no);
+		
+		model.addAttribute("hospitalVO", hospitalVO);
+		
+		return "/hospitalView";
+	}
+	
 	
 	@PostMapping("/insertDB")
 	public String insertDB(HospitalVO hospitalVO) {
