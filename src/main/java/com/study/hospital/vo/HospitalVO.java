@@ -6,12 +6,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class HospitalVO {
 	public int no;				// 번호
 	public int adtfrdd;			// 운영가능일자
+	public String hosptytpcd;	// 선정유형
 	public String sidonm;		// 시도명
 	public String sggunm;		// 시군구명
 	public String spcladmtycd;	// 구분코드
 	public String telno;		// 전화번호
 	public String yadmnm;		// 기관명
-	public String hosptytpcd;	// 선정유형
 	
 	@Override
 	public String toString() {

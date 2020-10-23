@@ -15,6 +15,7 @@
 		 , yadmnm
 		 , hosptytpcd
 	FROM HOSPITAL
+ORDER BY no DESC
   </select>
 
   <select id="getHospitalVO" resultType="com.study.hospital.vo.HospitalVO" parameterType="int">

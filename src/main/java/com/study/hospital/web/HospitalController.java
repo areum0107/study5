@@ -42,6 +42,7 @@ public class HospitalController {
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
+	// api 호출하는 URL. 실행시 API의 XML데이터를 받아온다
 	@ResponseBody
 	@GetMapping("/apiCall")
 	public String apicall(Model model) {
@@ -67,14 +68,15 @@ public class HospitalController {
 			}
 			urlconnection.disconnect();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(),e);
 		} 
+		// 결과를 문자열로 반환
 		return result.toString();
 	}
 	
+	// hospital.jsp로 연결만 해준다. 데이터는 jsp파일에서 스크립트로 호출해서 사용할 것
 	@GetMapping("/hospital")
 	public String hospitalApi() {
-		
 		return "hospital";
 	}
 	
@@ -92,29 +94,19 @@ public class HospitalController {
 		return map;
 	}
 	
-	@GetMapping("/hospitalDBList")
-	public String hospitalDBList(HospitalVO hospitalVO, ModelMap model) {
-		logger.debug("hospitalVO={}", hospitalVO);
-		
-		List<HospitalVO> hospitalVOList = hospitalService.getHospitalList(hospitalVO);
-		model.addAttribute("hospitalVOList", hospitalVOList);
-		logger.debug("hospitalVOList={}", hospitalVOList);
-		
-		return "hospitalList";
-	}
-	
+	// 병원 정보 상세보기 화면. 
 	@RequestMapping("/hospitalView")
 	public String hospitalView(int no, ModelMap model) {
 		logger.debug("no={}", no);
 		
 		HospitalVO hospitalVO =  hospitalService.getHospitalVO(no);
-		
+		// 받아온 no로 조회, 데이터를 model에 hospitalVO라는 이름으로 담아서 hospitalView에서 사용할 수 있음
 		model.addAttribute("hospitalVO", hospitalVO);
 		
 		return "/hospitalView";
 	}
 	
-	
+	// API 데이터를 DB에 insert
 	@PostMapping("/insertDB")
 	public String insertDB(HospitalVO hospitalVO) {
 		logger.debug("hospitalVO={}", hospitalVO);
@@ -124,19 +116,21 @@ public class HospitalController {
 		return "hospital";
 	}
 	
+	// DB 리스트를 엑셀로 다운로드
 	@RequestMapping("/exceldownload")
 	public void excelDownload(HospitalVO hospitalVO, HttpServletResponse response, Model model) throws Exception {
-		HSSFWorkbook objWorkBook = new HSSFWorkbook();
-		HSSFSheet	 objSheet = null;
-		HSSFRow objRow = null;
-		HSSFCell objCell = null;       //셀 생성
+		HSSFWorkbook objWorkBook = new HSSFWorkbook();	// 워크북 생성
+		HSSFSheet	 objSheet = null;		// 시트 생성
+		HSSFRow 	 objRow = null;			// 행 생성
+		HSSFCell 	 objCell = null;        // 셀 생성
 
 	  objSheet = objWorkBook.createSheet("hospital1");     //워크시트 생성
 
-	  // 1행
+	  // 1행 생성. 컬럼 역할
 	  objRow = objSheet.createRow(0);
 	  objRow.setHeight ((short) 0x150);
 
+	  // 여기서부터 셀 추가			  ↓ 번호에 따라
 	  objCell = objRow.createCell(0);
 	  objCell.setCellValue("NO");
 
@@ -166,43 +160,45 @@ public class HospitalController {
 	  int index = 1;
 	  for (HospitalVO hospitalVO2 : hospitalVOList) {
 
+		  // index가 1에서부터 시작하므로, 2번째 행부터 생성하며 hospitalVOList가 끝날때까지 반복
 		  objRow = objSheet.createRow(index);
 		  objRow.setHeight ((short) 0x150);
 		  
 		  objCell = objRow.createCell(0);
-		  objCell.setCellValue(hospitalVO2.getNo());
+		  objCell.setCellValue(hospitalVO2.getNo());		// 번호
 		  
 		  objCell = objRow.createCell(1);
-		  objCell.setCellValue(hospitalVO2.getAdtfrdd());
+		  objCell.setCellValue(hospitalVO2.getAdtfrdd());	// 운영가능일자
 		  
 		  objCell = objRow.createCell(2);
-		  objCell.setCellValue(hospitalVO2.getHosptytpcd());
+		  objCell.setCellValue(hospitalVO2.getHosptytpcd());	// 선정유형
 		  
 		  objCell = objRow.createCell(3);
-		  objCell.setCellValue(hospitalVO2.getSggunm());
+		  objCell.setCellValue(hospitalVO2.getSggunm());	// 시도명
 		  
 		  objCell = objRow.createCell(4);
-		  objCell.setCellValue(hospitalVO2.getSidonm());
+		  objCell.setCellValue(hospitalVO2.getSidonm());	// 시군구명	
 		  
 		  objCell = objRow.createCell(5);
-		  objCell.setCellValue(hospitalVO2.getSpcladmtycd());
+		  objCell.setCellValue(hospitalVO2.getSpcladmtycd());	// 구분코드
 		  
 		  objCell = objRow.createCell(6);
-		  objCell.setCellValue(hospitalVO2.getTelno());
+		  objCell.setCellValue(hospitalVO2.getTelno());		// 전화번호
 		  
 		  objCell = objRow.createCell(7);
-		  objCell.setCellValue(hospitalVO2.getYadmnm());
+		  objCell.setCellValue(hospitalVO2.getYadmnm());	// 기관명
 		  
 		  index++;
 	  }
 	  
 	  for (int i = 0; i < hospitalVOList.size(); i++) {
-		  objSheet.autoSizeColumn(i);
+		  objSheet.autoSizeColumn(i);	// 셀 너비 자동지정
 	  }
 
 	  response.setContentType("Application/Msexcel");
+	  // 다운로드 될 파일의 이름 지정
 	  response.setHeader("Content-Disposition", "ATTachment; Filename="+URLEncoder.encode("hospital_api_dw","UTF-8")+".xls");
-
+	  
 	  OutputStream fileOut  = response.getOutputStream();
 	  objWorkBook.write(fileOut);
 	  fileOut.close();
@@ -213,17 +209,21 @@ public class HospitalController {
 	  objWorkBook.close();
 	}
 	
+	// 엑셀 업로드
 	@ResponseBody
 	@PostMapping("/excelupload")
-	public ModelAndView excelUpload(MultipartFile uploadFile, MultipartHttpServletRequest request) throws Exception {
-		logger.debug("업로드 진행");
+	public String excelUpload(MultipartFile uploadFile, MultipartHttpServletRequest request) throws Exception {
+		logger.debug("업로드 파일={}", uploadFile);
 		
+		// hospital.jsp에 name이 excelFile인 input이 있음 .-
 		MultipartFile excelFile = request.getFile("excelFile");
 		
+		// 추가할 파일이 선택되지 않은 경우
 		if(excelFile == null || excelFile.isEmpty()) {
 			throw new RuntimeException("엑셀 파일을 선택해 주세요.");
 		}
 		
+		// 파일을 경로에 저장하고, destFile라는 이름으로 저장
 		File destFile = new File("C:\\tools\\upload"+excelFile.getOriginalFilename());
 		
 		try {
@@ -232,14 +232,16 @@ public class HospitalController {
 			throw new RuntimeException(e.getMessage());
 		} 
 		
+		// destFile 엑셀의 내용을 읽어 DB에 저장하고
 		hospitalService.excelUpload(destFile);
 		
+		// 경로에 있는 파일은 삭제
 		destFile.delete();
 		
-		ModelAndView mav = new ModelAndView();
-		mav.setViewName("/hospitalList");
+//		ModelAndView mav = new ModelAndView();
+//		mav.setViewName("/hospitalList");
 		
-		return mav;
+		return "/hospitalList";
 	}
 
 }
