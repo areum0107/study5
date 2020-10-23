@@ -31,12 +31,20 @@ table {
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x2js/1.2.0/xml2json.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script> 
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 </head>
 <body>
 <input type="button" id="id_save" value="저장하기">
 <input type="button" id="id_db_call" value="DB호출">
-<input type="button" id="id_gird" value="그리드 선택값 확인">
+<form method="post" action="exceldownload">
+	<input type="submit" value="엑셀 다운로드" />
+</form>
+
+<form id="excelUploadForm" method="post" action="excelupload" enctype="mulripart/form-data">
+	<input type="file" name="excelFile" id="excelFile" />
+	<button type="button" id="addExcelImpoartBtn" onclick="check()" ><span>추가</span></button>
+</form>
 <div>
 <div id="id_hosInfo" ></div>
 
@@ -213,10 +221,41 @@ document.addEventListener('DOMContentLoaded', function () {
     new agGrid.Grid(gridDiv, gridOptions);
 }); 
 
-// grid 안에서 행 클릭시 row 정보 가져옴
-$("#id_gird").on("click",function(){
-	console.log(gridOptions.api.getSelectedRows());
-});
+
+function checkFileType(filepath) {
+    var fileFormat = filepath.split(".");
+
+    if(fileFormat.indexOf("xls") > -1 || fileFormat.indexOf("xlsx") > -1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function check(){
+    var file = $("#excelFile").val();
+
+    if(file=="" || file==null) {
+        alert("파일을 선택해주세요.");
+
+        return false;
+    } else if (!checkFileType(file)) {
+        alert("엑셀 파일만 업로드 가능합니다.");
+        
+        return false;
+    }
+
+    if(confirm("업로드 하시겠습니까?")) {
+        var options = {
+            success : function(data) {
+                console.log(data);
+                alert("모든 데이터가 업로드 되었습니다.");
+            },
+            type : "POST"
+        };
+        $("#excelUploadForm").ajaxSubmit(options);
+    }
+}
 </script>
 </body>
 </html>
